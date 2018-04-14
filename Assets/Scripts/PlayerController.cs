@@ -154,14 +154,14 @@ public class PlayerController : MonoBehaviour
 
     public void HeatUp(float fHeatAmount_)
     {
-        fCurrentHeat += fHeatAmount_;
+        /*fCurrentHeat += fHeatAmount_;
         //print(fCurrentHeat);
         if (fCurrentHeat >= fMaxHeat && !bDisabled)
         {
             StartCoroutine(OverHeat());
             Rb.velocity = Vector3.zero;
             Rb.AddRelativeForce(new Vector3(0, -1, 0) * 1000.0f);
-        }
+        }*/
     }
 
     IEnumerator OverHeat()
