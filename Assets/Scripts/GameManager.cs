@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
+    public int timeLimit;
     public GameObject[] mechs;
     public GameObject[] spawnPoints;
     //private PlayerHolder playerholder;

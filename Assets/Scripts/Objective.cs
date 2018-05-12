@@ -12,7 +12,7 @@ public class Objective : MonoBehaviour
 	void Start ()
     {
         //display objective type and description on screen
-        InvokeRepeating("LifeUpdate", 3, 1);
+        //InvokeRepeating("LifeUpdate", 3, 1);
 	}
 	
 	// Update is called once per frame
@@ -21,14 +21,14 @@ public class Objective : MonoBehaviour
         //subtract a second off of lifetime every second
 	}
 
-    private void LifeUpdate()
-    {
-        --LifeTime;
-        if (LifeTime <= 0)
-        {
-            ObjectiveFinshed();
-        }
-    }
+    //private void LifeUpdate()
+    //{
+    //    --LifeTime;
+    //    if (LifeTime <= 0)
+    //    {
+    //        ObjectiveFinshed();
+    //    }
+    //}
 
     public void Complete()
     {

@@ -41,6 +41,7 @@ public class PlayerController : MonoBehaviour
 
     //Movement Axis
     private float LeftAxisH;
+    private float LeftAxisV;
 
     private float RightAxisH;
     private float RightAxisV;
@@ -67,13 +68,15 @@ public class PlayerController : MonoBehaviour
             state = GamePad.GetState(playerIndex);
 
             LeftAxisH = state.ThumbSticks.Left.X;
+            LeftAxisV = state.ThumbSticks.Left.Y;
 
             RightAxisH = state.ThumbSticks.Right.X;
             RightAxisV = state.ThumbSticks.Right.Y;
 
-            if (LeftAxisH != 0)
+            if (LeftAxisH != 0 || LeftAxisV != 0)
             {
-                Tr.Rotate(transform.forward * TurnSpeed * -LeftAxisH);
+                float LookDirection = Mathf.Atan2(LeftAxisV, LeftAxisH);
+                Tr.rotation = Quaternion.Euler(0f, 0f, LookDirection * Mathf.Rad2Deg);
             }
 
             if (prevState.ThumbSticks.Right.X == 0 && prevState.ThumbSticks.Right.Y == 0)
@@ -81,8 +84,12 @@ public class PlayerController : MonoBehaviour
                 if (RightAxisH != 0 || RightAxisV != 0)
                 {
                     Dash(RightAxisH, RightAxisV);
-                    HeatUp(5);
                 }
+            }
+
+            if(state.Triggers.Left > 0.1f)
+            {
+                Brake();
             }
 
             if (bDashing == true)
@@ -96,24 +103,13 @@ public class PlayerController : MonoBehaviour
                 }
             }
         }
-                /*Keyboard input
-        if (Input.GetKey(KeyCode.LeftArrow))
-        {
-            Tr.Rotate(new Vector3(0f, 0f, 1f), TurnSpeed);
-        }
-        if (Input.GetKey(KeyCode.RightArrow))
-        {
-            Tr.Rotate(new Vector3(0f, 0f, 1f), -TurnSpeed);
-        }*/
-
     }
 
     void FixedUpdate()
     {
-        if (!bDisabled && state.Triggers.Left > 0.1f)
+        if (!bDisabled && LeftAxisH != 0 || LeftAxisV != 0)
         {
-            Rb.AddRelativeForce(new Vector3(1,0,0) * (Speed * state.Triggers.Left));
-            HeatUp(1.0f);
+            Rb.AddRelativeForce(new Vector3(1,0,0) * Speed);
         }
 
         if (!bDisabled && Rb.velocity.magnitude > maxSpeed)
@@ -130,7 +126,6 @@ public class PlayerController : MonoBehaviour
         Vector3 InverseNorm = -NormalizedAngle;
 
         RaycastHit DashHit;
-        //print("H " + INfAxisH + " V " + INfAxisV);
         if (Physics.Raycast(transform.position, NormalizedAngle, out DashHit, DashDistance))
         {
             curDashTargetPos = DashHit.point + (InverseNorm * 2);
@@ -138,10 +133,8 @@ public class PlayerController : MonoBehaviour
         }
         else
         {
-            //Physics.Raycast(transform.position, new Vector3(INfAxisH, INfAxisV, 0), 45);
             Vector3 FinalDestination = new Vector3(Tr.position.x + (NormalizedAngle.x * (DashDistance)),
                                                Tr.position.y + (NormalizedAngle.y * (DashDistance)), 0);
-            //print(FinalDestination);
             curDashTargetPos = FinalDestination;
             bDashing = true;
         }
@@ -152,24 +145,9 @@ public class PlayerController : MonoBehaviour
 
     }
 
-    public void HeatUp(float fHeatAmount_)
+    public void Brake()
     {
-        /*fCurrentHeat += fHeatAmount_;
-        //print(fCurrentHeat);
-        if (fCurrentHeat >= fMaxHeat && !bDisabled)
-        {
-            StartCoroutine(OverHeat());
-            Rb.velocity = Vector3.zero;
-            Rb.AddRelativeForce(new Vector3(0, -1, 0) * 1000.0f);
-        }*/
-    }
-
-    IEnumerator OverHeat()
-    {
-        bDisabled = true;
-        bDashing = false;
-        yield return new WaitForSeconds(4.0f);
-        bDisabled = false;
-        fCurrentHeat = 0;
+        Rb.velocity = Vector3.zero;
+        Rb.useGravity = false;
     }
 }
