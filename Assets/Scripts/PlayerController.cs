@@ -8,6 +8,7 @@ public class PlayerController : MonoBehaviour
     //frequently referenced components
     private Rigidbody Rb;
     private Transform Tr;
+    private GameObject gGun;
 
     //Heat generattion and management
     [SerializeField]
@@ -21,15 +22,9 @@ public class PlayerController : MonoBehaviour
 
     //Moving
     [SerializeField]
-    private float maxSpeed = 25f;
+    private float maxSpeed = 50f;
     [SerializeField]
-    private float Speed = 100f;
-
-    //Dash stuff
-    [SerializeField]
-    private float DashDistance = 50f;
-    [SerializeField]
-    private float DashSpeed = 20f;
+    private float Speed = 500f;
 
     //Used to store an instance of the dash position to move towards
     private Vector3 curDashTargetPos;
@@ -43,12 +38,14 @@ public class PlayerController : MonoBehaviour
     private float LeftAxisH;
     private float LeftAxisV;
 
+    //Rotation Axis (robot mode only!)
     private float RightAxisH;
     private float RightAxisV;
 
-    //Utility Booleans
+    //Gameplay Booleans
     public bool bDisabled = false;
     private bool bDashing = false;
+    private bool bRobotMode = false;
 
 
 
@@ -57,6 +54,7 @@ public class PlayerController : MonoBehaviour
     {
         Rb = GetComponent<Rigidbody>();
         Tr = GetComponent<Transform>();
+        gGun = transform.GetChild(0).gameObject;
     }
 
     // Update is called once per frame
@@ -79,32 +77,23 @@ public class PlayerController : MonoBehaviour
                 Tr.rotation = Quaternion.Euler(0f, 0f, LookDirection * Mathf.Rad2Deg);
             }
 
-            if (prevState.ThumbSticks.Right.X == 0 && prevState.ThumbSticks.Right.Y == 0)
+            if (bRobotMode)
             {
                 if (RightAxisH != 0 || RightAxisV != 0)
                 {
-                    Dash(RightAxisH, RightAxisV);
+                    float LookDirection = Mathf.Atan2(RightAxisV, RightAxisH);
+                    gGun.transform.rotation = Quaternion.Euler(0f, 0f, LookDirection * Mathf.Rad2Deg);
                 }
             }
 
-            if(state.Triggers.Left > 0.1f)
+            if(prevState.Triggers.Left < 0.1f && state.Triggers.Left > 0.1f)
             {
-                Brake();
-            }
-
-            if (bDashing == true)
-            {
-                Tr.position = Vector3.MoveTowards(Tr.position, curDashTargetPos, DashSpeed);
-
-                if (Tr.position == curDashTargetPos)
-                {
-                    bDashing = false;
-                    curDashTargetPos = Vector3.zero;
-                }
+                TransformRobot();
             }
         }
     }
 
+    //physics
     void FixedUpdate()
     {
         if (!bDisabled && LeftAxisH != 0 || LeftAxisV != 0)
@@ -118,36 +107,29 @@ public class PlayerController : MonoBehaviour
         }
      }
 
-    void Dash(float INfAxisH, float INfAxisV)
-    {
-        Rb.velocity = Vector3.zero;
-
-        Vector3 NormalizedAngle = Vector3.Normalize(new Vector3(RightAxisH, RightAxisV, 0));
-        Vector3 InverseNorm = -NormalizedAngle;
-
-        RaycastHit DashHit;
-        if (Physics.Raycast(transform.position, NormalizedAngle, out DashHit, DashDistance))
-        {
-            curDashTargetPos = DashHit.point + (InverseNorm * 2);
-            bDashing = true;
-        }
-        else
-        {
-            Vector3 FinalDestination = new Vector3(Tr.position.x + (NormalizedAngle.x * (DashDistance)),
-                                               Tr.position.y + (NormalizedAngle.y * (DashDistance)), 0);
-            curDashTargetPos = FinalDestination;
-            bDashing = true;
-        }
-    }
-
     void Shoot()
     {
 
     }
 
-    public void Brake()
+    private void TransformRobot()
     {
         Rb.velocity = Vector3.zero;
-        Rb.useGravity = false;
+        //if in robot mode switch to plane
+        if (bRobotMode)
+        {
+            gGun.transform.localRotation = Quaternion.identity;//Quaternion.Euler(Vector3.zero);
+            bRobotMode = false;
+            maxSpeed = 50.0f;
+            Rb.useGravity = true;
+        }
+
+        //vice versa
+        else
+        {
+            bRobotMode = true;
+            maxSpeed = 30.0f;
+            Rb.useGravity = false;
+        }
     }
 }
